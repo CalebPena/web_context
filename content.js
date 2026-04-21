@@ -1,6 +1,11 @@
-// Element picker: on toggle, hovering shows an outline. Press a letter to copy
-// context for the hovered element. Clicks are swallowed so the page doesn't
-// receive them while the picker is active.
+// Element picker: on toggle, hovering shows an outline. Click (with optional
+// modifier) for the original copy modes, or press a letter for any mode.
+//
+// Click shortcuts:
+//   click         → raw HTML       (same as 'h')
+//   ctrl+click    → bare HTML      (same as 'b')
+//   shift+click   → plain text     (same as 't')
+//   alt+click     → console logs   (same as 'c')
 //
 // Letter keys (hover an element first):
 //   h → raw HTML (outerHTML)
@@ -45,10 +50,11 @@
 
   const LEGEND_HTML = `
     <div class="wcp-legend-title">—</div>
-    <div class="wcp-legend-row"><span class="wcp-k">h</span><span>html</span></div>
-    <div class="wcp-legend-row"><span class="wcp-k">b</span><span>bare html</span></div>
-    <div class="wcp-legend-row"><span class="wcp-k">t</span><span>text</span></div>
-    <div class="wcp-legend-row"><span class="wcp-k">c</span><span>console</span></div>
+    <div class="wcp-legend-row"><span class="wcp-k">click / h</span><span>html</span></div>
+    <div class="wcp-legend-row"><span class="wcp-k">ctrl+click / b</span><span>bare html</span></div>
+    <div class="wcp-legend-row"><span class="wcp-k">shift+click / t</span><span>text</span></div>
+    <div class="wcp-legend-row"><span class="wcp-k">alt+click / c</span><span>console</span></div>
+    <div class="wcp-legend-sep"></div>
     <div class="wcp-legend-row"><span class="wcp-k">s</span><span>styles</span></div>
     <div class="wcp-legend-row"><span class="wcp-k">p</span><span>selector</span></div>
     <div class="wcp-legend-row"><span class="wcp-k">n</span><span>network</span></div>
@@ -153,12 +159,17 @@
     );
   }
 
-  function onClick(e) {
-    // Swallow clicks so the page doesn't receive them during picker mode.
+  async function onClick(e) {
     if (!active) return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
+    // Original click shortcuts.
+    let key = "h";
+    if (e.shiftKey) key = "t";
+    else if (e.altKey) key = "c";
+    else if (e.ctrlKey || e.metaKey) key = "b";
+    await runMode(key);
   }
 
   function onAuxClick(e) {
